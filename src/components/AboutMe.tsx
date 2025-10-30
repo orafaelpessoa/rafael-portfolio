@@ -16,11 +16,17 @@ export default function AboutMe() {
     }),
   };
 
+  const scrollToContact = () => {
+    const contactSection = document.getElementById("contact");
+    contactSection?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <section
       id="about"
       className="py-20 px-10 bg-neutral-900 flex flex-col md:flex-row items-center gap-10 overflow-hidden"
     >
+      {/* Foto com hover animado */}
       <motion.div
         className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden flex-shrink-0 border-4 border-purple-600 shadow-[0_0_25px_rgba(168,85,247,0.3)]"
         initial={{ opacity: 0, x: -60 }}
@@ -90,10 +96,17 @@ export default function AboutMe() {
           Meu foco é unir design e performance para entregar projetos que realmente encantem o usuário.
         </motion.p>
 
-        {/* Botão animado */}
-        <motion.div custom={4} variants={textVariant} initial="hidden" whileInView="visible" viewport={{ once: true }} className="pt-6">
-          <motion.a
-            href="#contact"
+        {/* Botão animado para scroll */}
+        <motion.div
+          custom={4}
+          variants={textVariant}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="pt-6"
+        >
+          <motion.button
+            onClick={scrollToContact}
             className="relative inline-block px-8 py-3 font-semibold text-lg text-white rounded-lg overflow-hidden bg-gradient-to-r from-purple-600 to-fuchsia-500 shadow-[0_0_25px_rgba(168,85,247,0.4)]"
             whileHover={{
               scale: 1.05,
@@ -109,7 +122,7 @@ export default function AboutMe() {
               whileHover={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             />
-          </motion.a>
+          </motion.button>
         </motion.div>
       </motion.div>
     </section>
