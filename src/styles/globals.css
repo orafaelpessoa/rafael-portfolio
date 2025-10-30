@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+
+body {
+  @apply bg-black text-white;
+}
+
+.perspective {
+  perspective: 1000px;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
