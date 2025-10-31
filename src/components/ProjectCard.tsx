@@ -27,7 +27,7 @@ export default function ProjectCard({ project }: { project: Project }) {
       whileHover={{ scale: 1.05 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <div className="h-40 md:h-48 w-full mb-4 overflow-hidden rounded">
+      <div className="h-40 md:h-48 w-full mb-4 overflow-hidden rounded-lg">
         {project.images.length > 0 ? (
           <img
             src={project.images[currentImage]}
