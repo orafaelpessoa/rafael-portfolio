@@ -26,17 +26,17 @@ export default function AboutMe() {
       id="about"
       className="py-20 px-10 bg-black flex flex-col md:flex-row items-center gap-10 overflow-hidden"
     >
-      {/* Foto com animação */}
+      {/* Foto com animação e brilho pulsante */}
       <motion.div
-        className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden shrink-0 border-4 border-purple-600 shadow-[0_0_25px_rgba(168,85,247,0.3)]"
+        className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden shrink-0 border-4 border-purple-600 shadow-[0_0_30px_rgba(168,85,247,0.5)] animate-pulse-slow"
         initial={{ opacity: 0, x: -60 }}
         whileInView={{ opacity: 1, x: 0 }}
         transition={{ duration: 1 }}
-        whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(168,85,247,0.6)" }}
+        whileHover={{ scale: 1.05, boxShadow: "0 0 50px rgba(168,85,247,0.8)" }}
         viewport={{ once: true }}
       >
         <img
-          src="/me.jpg"
+          src="/icons/images/profile.jpg"
           alt="Rafael Pessoa"
           className="w-full h-full object-cover"
         />
