@@ -26,7 +26,6 @@ export default function AboutMe() {
       id="about"
       className="py-20 px-10 bg-black flex flex-col md:flex-row items-center gap-10 overflow-hidden"
     >
-      {/* Foto com animação e brilho pulsante */}
       <motion.div
         className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden shrink-0 border-4 border-purple-600 shadow-[0_0_30px_rgba(168,85,247,0.5)] animate-pulse-slow"
         initial={{ opacity: 0, x: -60 }}
@@ -42,7 +41,6 @@ export default function AboutMe() {
         />
       </motion.div>
 
-      {/* Texto */}
       <motion.div
         className="flex-1 text-white space-y-4"
         initial="hidden"
