@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import useAuth from "@/src/hooks/useAuth";
 
 export default function AdminLayout({
@@ -10,6 +11,13 @@ export default function AdminLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!loading && !user && pathname !== "/admin/login") {
+      router.push("/admin/login");
+    }
+  }, [loading, user, router, pathname]);
 
   if (loading) {
     return (
@@ -19,8 +27,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!user) {
-    router.push("/admin/login");
+  if (!user && pathname !== "/admin/login") {
     return null;
   }
 

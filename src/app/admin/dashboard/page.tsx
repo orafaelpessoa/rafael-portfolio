@@ -12,12 +12,15 @@ import {
   doc,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
+import { uploadImage } from "@/src/lib/uploadImage";
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -44,21 +47,37 @@ export default function Dashboard() {
   const addProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
-    await addDoc(collection(db, "projects"), {
-      title,
-      description,
-      createdAt: new Date(),
-    });
-    setTitle("");
-    setDescription("");
-    fetchProjects();
+
+    try {
+      setUploading(true);
+
+      let imageUrl = "";
+      if (image) {
+        imageUrl = await uploadImage(image, "projects");
+      }
+
+      await addDoc(collection(db, "projects"), {
+        title,
+        description,
+        imageUrl,
+        createdAt: new Date(),
+      });
+
+      setTitle("");
+      setDescription("");
+      setImage(null);
+      fetchProjects();
+    } catch (error) {
+      console.error("Erro ao adicionar projeto:", error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const deleteProject = async (id: string) => {
     await deleteDoc(doc(db, "projects", id));
     fetchProjects();
   };
-
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -94,17 +113,27 @@ export default function Dashboard() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+
           <textarea
             placeholder="Descrição"
             className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files?.[0] || null)}
+            className="text-gray-400"
+          />
+
           <button
             type="submit"
-            className="bg-purple-500 py-2 rounded-lg hover:bg-purple-600 transition"
+            disabled={uploading}
+            className="bg-purple-500 py-2 rounded-lg hover:bg-purple-600 transition disabled:opacity-50"
           >
-            Adicionar projeto
+            {uploading ? "Enviando..." : "Adicionar projeto"}
           </button>
         </form>
 
@@ -121,6 +150,13 @@ export default function Dashboard() {
                   {project.title}
                 </h3>
                 <p className="text-gray-400">{project.description}</p>
+                {project.imageUrl && (
+                  <img
+                    src={project.imageUrl}
+                    alt={project.title}
+                    className="mt-3 rounded-lg w-40 object-cover"
+                  />
+                )}
               </div>
               <button
                 onClick={() => deleteProject(project.id)}

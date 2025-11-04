@@ -1,102 +1,82 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/src/lib/firebase";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
+import { auth } from "@/src/lib/firebase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/admin/dashboard");
+      router.push("/admin");
     } catch (err: any) {
-      setError("Credenciais inválidas. Tente novamente.");
+      if (err.code === "auth/user-not-found") {
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          router.push("/admin");
+        } catch (err2: any) {
+          setError("Erro ao criar usuário: " + err2.message);
+        }
+      } else {
+        setError("Erro ao fazer login: " + err.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-linear-to-br from-purple-900/10 via-black to-purple-950/20 blur-3xl"></div>
-
-      <motion.div
-        className="w-full max-w-md bg-neutral-900/70 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-purple-600/20 relative z-10"
-        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{
-          duration: 0.8,
-          ease: [0.25, 0.1, 0.25, 1],
-        }}
+    <div className="flex items-center justify-center min-h-screen bg-black text-white px-4">
+      <form
+        onSubmit={handleLogin}
+        className="bg-gray-900 p-8 rounded-2xl shadow-lg flex flex-col gap-4 w-full max-w-md"
       >
-        <motion.h1
-          className="text-3xl font-bold text-center text-purple-400 mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+        <h1 className="text-2xl font-bold text-purple-400 text-center">
+          Login Admin
+        </h1>
+
+        {error && <p className="text-red-500 text-center">{error}</p>}
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
+          required
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-purple-500 py-2 rounded-lg hover:bg-purple-600 transition disabled:opacity-60"
         >
-          Painel Admin
-        </motion.h1>
-
-        <motion.form
-          onSubmit={handleLogin}
-          className="space-y-5"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-neutral-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Digite seu email"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-neutral-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Digite sua senha"
-              required
-            />
-          </div>
-
-          {error && (
-            <motion.p
-              className="text-red-400 text-sm text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {error}
-            </motion.p>
-          )}
-
-          <motion.button
-            type="submit"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors font-semibold mt-2"
-          >
-            Entrar
-          </motion.button>
-        </motion.form>
-      </motion.div>
+          {loading ? "Entrando..." : "Entrar / Cadastrar"}
+        </button>
+      </form>
     </div>
   );
 }
