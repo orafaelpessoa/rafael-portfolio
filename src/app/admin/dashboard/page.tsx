@@ -1,18 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { auth, db } from "@/src/lib/firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
+import { supabase } from "@/src/lib/supabase";
 import { motion } from "framer-motion";
-import { uploadImage } from "@/src/lib/uploadImage";
+import { uploadImage, fetchProjects, addProject, deleteProject } from "@/src/lib/projects";
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
@@ -24,49 +16,39 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data?.user) {
         router.push("/admin/login");
       } else {
-        setUser(currentUser);
-        fetchProjects();
+        setUser(data.user);
+        loadProjects();
       }
-    });
-    return () => unsubscribe();
+    };
+    checkUser();
   }, [router]);
 
-  const fetchProjects = async () => {
-    const querySnapshot = await getDocs(collection(db, "projects"));
-    const projectsData = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setProjects(projectsData);
+  const loadProjects = async () => {
+    const data = await fetchProjects();
+    setProjects(data);
   };
 
-  const addProject = async (e: React.FormEvent) => {
+  const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
-
     try {
       setUploading(true);
-
       let imageUrl = "";
+
       if (image) {
-        imageUrl = await uploadImage(image, "projects");
+        imageUrl = await uploadImage(image);
       }
 
-      await addDoc(collection(db, "projects"), {
-        title,
-        description,
-        imageUrl,
-        createdAt: new Date(),
-      });
-
+      await addProject({ title, description, imageUrl });
       setTitle("");
       setDescription("");
       setImage(null);
-      fetchProjects();
+      loadProjects();
     } catch (error) {
       console.error("Erro ao adicionar projeto:", error);
     } finally {
@@ -74,13 +56,13 @@ export default function Dashboard() {
     }
   };
 
-  const deleteProject = async (id: string) => {
-    await deleteDoc(doc(db, "projects", id));
-    fetchProjects();
+  const handleDelete = async (id: string) => {
+    await deleteProject(id);
+    loadProjects();
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     router.push("/admin/login");
   };
 
@@ -103,7 +85,7 @@ export default function Dashboard() {
         </button>
 
         <form
-          onSubmit={addProject}
+          onSubmit={handleAddProject}
           className="flex flex-col gap-4 bg-gray-900 p-6 rounded-2xl shadow-lg mb-10"
         >
           <input
@@ -159,7 +141,7 @@ export default function Dashboard() {
                 )}
               </div>
               <button
-                onClick={() => deleteProject(project.id)}
+                onClick={() => handleDelete(project.id)}
                 className="bg-red-600 px-3 py-1 rounded hover:bg-red-700 transition"
               >
                 Deletar

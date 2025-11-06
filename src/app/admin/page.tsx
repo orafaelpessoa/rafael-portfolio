@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { auth } from "@/src/lib/firebase";
+import { motion } from "framer-motion";
+import { supabase } from "@/src/lib/supabase";
 import {
   fetchProjects,
   addProject,
@@ -12,7 +12,6 @@ import {
   uploadImage,
   Project,
 } from "@/src/lib/projects";
-import { motion } from "framer-motion";
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
@@ -25,14 +24,28 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) router.push("/admin/login");
-      else {
-        setUser(currentUser);
+    // Verifica sessão atual e mantém o usuário logado
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error || !data.session) {
+        router.push("/admin/login");
+      } else {
+        setUser(data.session.user);
         loadProjects();
       }
+    };
+
+    checkSession();
+
+    // Observa mudanças de sessão (login/logout)
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) router.push("/admin/login");
+      else setUser(session.user);
     });
-    return () => unsubscribe();
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, [router]);
 
   const loadProjects = async () => {
@@ -61,7 +74,6 @@ export default function Dashboard() {
     if (editId) {
       await updateProject(editId, { title, description, imageUrl });
     } else {
-
       await addProject({ title, description, imageUrl });
     }
 
@@ -90,7 +102,7 @@ export default function Dashboard() {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     router.push("/admin/login");
   };
 

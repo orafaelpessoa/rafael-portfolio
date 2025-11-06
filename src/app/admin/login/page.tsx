@@ -2,81 +2,73 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
-import { auth } from "@/src/lib/firebase";
+import { supabase } from "@/src/lib/supabase";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    setErrorMsg("");
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push("/admin");
-    } catch (err: any) {
-      if (err.code === "auth/user-not-found") {
-        try {
-          await createUserWithEmailAndPassword(auth, email, password);
-          router.push("/admin");
-        } catch (err2: any) {
-          setError("Erro ao criar usuário: " + err2.message);
-        }
-      } else {
-        setError("Erro ao fazer login: " + err.message);
-      }
-    } finally {
-      setLoading(false);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrorMsg(error.message);
+    } else if (data.user) {
+      router.push("/admin/dashboard");
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black text-white px-4">
-      <form
+    <section className="min-h-screen flex items-center justify-center bg-black text-white p-6">
+      <motion.form
         onSubmit={handleLogin}
-        className="bg-gray-900 p-8 rounded-2xl shadow-lg flex flex-col gap-4 w-full max-w-md"
+        className="flex flex-col gap-4 bg-gray-900 p-8 rounded-2xl shadow-lg w-full max-w-md"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl font-bold text-purple-400 text-center">
-          Login Admin
+        <h1 className="text-3xl font-bold text-purple-400 mb-4 text-center">
+          Admin Login
         </h1>
-
-        {error && <p className="text-red-500 text-center">{error}</p>}
 
         <input
           type="email"
-          placeholder="Email"
+          placeholder="E-mail"
+          className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
-          required
         />
 
         <input
           type="password"
           placeholder="Senha"
+          className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
-          required
         />
+
+        {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
 
         <button
           type="submit"
           disabled={loading}
-          className="bg-purple-500 py-2 rounded-lg hover:bg-purple-600 transition disabled:opacity-60"
+          className="bg-purple-500 py-2 rounded-lg hover:bg-purple-600 transition disabled:opacity-50"
         >
-          {loading ? "Entrando..." : "Entrar / Cadastrar"}
+          {loading ? "Entrando..." : "Login"}
         </button>
-      </form>
-    </div>
+      </motion.form>
+    </section>
   );
 }

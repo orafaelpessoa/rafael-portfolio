@@ -1,73 +1,63 @@
-import { db, storage } from "./firebase";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  deleteDoc,
-  doc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-import {
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-} from "firebase/storage";
+import { supabase } from "./supabase";
 
 export interface Project {
   id?: string;
   title: string;
   description: string;
   imageUrl?: string;
+  created_at?: string;
 }
 
-const projectCollection = collection(db, "projects");
-
+// 🔹 Upload da imagem para o bucket "portfolio-storage"
 export const uploadImage = async (
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const storageRef = ref(storage, `projects/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+  const filePath = `projects/${Date.now()}_${file.name}`;
 
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        if (onProgress) onProgress(progress);
-      },
-      (error) => reject(error),
-      async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        resolve(url);
-      }
-    );
-  });
+  const { data, error } = await supabase.storage
+    .from("portfolio-storage")
+    .upload(filePath, file);
+
+  if (error) throw error;
+
+  // ✅ getPublicUrl não retorna "error", apenas "data"
+  const { data: urlData } = supabase.storage
+    .from("portfolio-storage")
+    .getPublicUrl(filePath);
+
+  if (!urlData?.publicUrl) {
+    throw new Error("Não foi possível obter a URL pública da imagem.");
+  }
+
+  return urlData.publicUrl;
 };
 
+// 🔹 Buscar projetos
 export const fetchProjects = async (): Promise<Project[]> => {
-  const snapshot = await getDocs(projectCollection);
-  return snapshot.docs.map((docSnap) => ({
-    id: docSnap.id,
-    ...docSnap.data(),
-  })) as Project[];
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data || [];
 };
 
+// 🔹 Adicionar projeto
 export const addProject = async (project: Project) => {
-  await addDoc(projectCollection, {
-    ...project,
-    createdAt: serverTimestamp(),
-  });
+  const { error } = await supabase.from("projects").insert([project]);
+  if (error) throw error;
 };
 
+// 🔹 Deletar projeto
 export const deleteProject = async (id: string) => {
-  const projectRef = doc(db, "projects", id);
-  await deleteDoc(projectRef);
+  const { error } = await supabase.from("projects").delete().eq("id", id);
+  if (error) throw error;
 };
 
+// 🔹 Atualizar projeto
 export const updateProject = async (id: string, data: Partial<Project>) => {
-  const projectRef = doc(db, "projects", id);
-  await updateDoc(projectRef, { ...data, updatedAt: serverTimestamp() });
+  const { error } = await supabase.from("projects").update(data).eq("id", id);
+  if (error) throw error;
 };
