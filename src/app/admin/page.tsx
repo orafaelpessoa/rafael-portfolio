@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { supabase } from "@/src/lib/supabase";
+import {uploadProfileImage, updateUserAvatar} from "@/src/lib/profile";
 import {
   fetchProjects,
   addProject,
@@ -31,7 +32,7 @@ export default function Dashboard() {
         router.push("/admin/login");
       } else {
         setUser(data.session.user);
-        loadProjects();
+        await loadProjects();
       }
     };
 
@@ -49,8 +50,20 @@ export default function Dashboard() {
   }, [router]);
 
   const loadProjects = async () => {
-    const data = await fetchProjects();
-    setProjects(data);
+    console.log("🟣 [DEBUG] Carregando projetos...");
+    try {
+      const data = await fetchProjects();
+
+      if (!data || data.length === 0) {
+        console.warn("⚠️ Nenhum projeto retornado do Supabase");
+      } else {
+        console.log(`✅ ${data.length} projetos carregados:`, data);
+      }
+
+      setProjects(data);
+    } catch (error) {
+      console.error("❌ Erro ao carregar projetos:", error);
+    }
   };
 
   const resetForm = () => {
@@ -71,19 +84,29 @@ export default function Dashboard() {
       imageUrl = await uploadImage(image);
     }
 
-    if (editId) {
-      await updateProject(editId, { title, description, imageUrl });
-    } else {
-      await addProject({ title, description, imageUrl });
+    try {
+      if (editId) {
+        await updateProject(editId, { title, description, imageUrl });
+        console.log("✏️ Projeto atualizado com sucesso!");
+      } else {
+        await addProject({ title, description, imageUrl });
+        console.log("🆕 Projeto adicionado com sucesso!");
+      }
+      resetForm();
+      loadProjects();
+    } catch (error) {
+      console.error("❌ Erro ao adicionar/editar projeto:", error);
     }
-
-    resetForm();
-    loadProjects();
   };
 
   const handleDeleteProject = async (id: string) => {
-    await deleteProject(id);
-    loadProjects();
+    try {
+      await deleteProject(id);
+      console.log("🗑️ Projeto deletado com sucesso!");
+      loadProjects();
+    } catch (error) {
+      console.error("❌ Erro ao deletar projeto:", error);
+    }
   };
 
   const handleEditProject = (project: Project) => {
@@ -119,7 +142,7 @@ export default function Dashboard() {
 
         <button
           onClick={handleLogout}
-          className="bg-purple-500 px-4 py-2 rounded-lg hover:bg-purple-600 transition mb-10"
+          className="cursor-pointer bg-purple-500 px-4 py-2 rounded-lg hover:bg-purple-600 transition mb-10"
         >
           Sair
         </button>
@@ -162,7 +185,7 @@ export default function Dashboard() {
           <div className="flex gap-3">
             <button
               type="submit"
-              className="bg-purple-500 flex-1 py-2 rounded-lg hover:bg-purple-600 transition"
+              className="cursor-pointer bg-purple-500 flex-1 py-2 rounded-lg hover:bg-purple-600 transition"
             >
               {editId ? "Salvar Alterações" : "Adicionar Projeto"}
             </button>
@@ -171,7 +194,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-gray-700 flex-1 py-2 rounded-lg hover:bg-gray-600 transition"
+                className="cursor-pointer bg-gray-700 flex-1 py-2 rounded-lg hover:bg-gray-600 transition"
               >
                 Cancelar
               </button>
@@ -206,13 +229,13 @@ export default function Dashboard() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEditProject(project)}
-                  className="bg-blue-600 px-3 py-1 rounded hover:bg-blue-700 transition"
+                  className="cursor-pointer bg-blue-600 px-3 py-1 rounded hover:bg-blue-700 transition"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => project.id && handleDeleteProject(project.id)}
-                  className="bg-red-600 px-3 py-1 rounded hover:bg-red-700 transition"
+                  className="cursor-pointer bg-red-600 px-3 py-1 rounded hover:bg-red-700 transition"
                 >
                   Deletar
                 </button>

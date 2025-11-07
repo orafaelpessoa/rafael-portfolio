@@ -1,13 +1,40 @@
 "use client";
 
-import ProjectCard from "./ProjectCard";
-import { projects } from "../data/projects";
-import CountUp from "react-countup";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import CountUp from "react-countup";
+import ProjectCard from "./ProjectCard";
+import { supabase } from "@/src/lib/supabase";
+
+interface Project {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+}
 
 export default function Projects() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, title, description, imageUrl")
+        .order("id", { ascending: false });
+
+      if (error) {
+        console.error("Erro ao carregar projetos:", error);
+        return;
+      }
+
+      setProjects(data || []);
+    };
+
+    fetchProjects();
+  }, []);
+
   const projectsToShow = showAll ? projects : projects.slice(0, 6);
 
   if (!projects.length) return null;
