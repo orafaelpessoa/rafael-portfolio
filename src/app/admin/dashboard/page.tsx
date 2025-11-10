@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { motion } from "framer-motion";
-import { uploadImage, fetchProjects, addProject, deleteProject } from "@/src/lib/projects";
+import ProfileImageUploader from "@/src/components/ProfileImageUploader";
+import {
+  uploadImage,
+  fetchProjects,
+  addProject,
+  deleteProject,
+} from "@/src/lib/projects";
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
@@ -36,6 +42,7 @@ export default function Dashboard() {
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
+
     try {
       setUploading(true);
       let imageUrl = "";
@@ -69,6 +76,7 @@ export default function Dashboard() {
   return (
     <section className="min-h-screen bg-black text-white p-10">
       <div className="max-w-3xl mx-auto">
+        {/* Título */}
         <motion.h1
           className="text-3xl font-bold text-purple-400 mb-6"
           initial={{ opacity: 0, y: -20 }}
@@ -77,16 +85,21 @@ export default function Dashboard() {
           Painel de Controle
         </motion.h1>
 
+        {/* Botão sair */}
         <button
           onClick={handleLogout}
-          className="bg-purple-500 px-4 py-2 rounded-lg hover:bg-purple-600 transition mb-10"
+          className="cursor-pointer bg-purple-500 px-4 py-2 rounded-lg hover:bg-purple-600 transition mb-10"
         >
           Sair
         </button>
 
+        {/* Upload de foto de perfil */}
+        <ProfileImageUploader />
+
+        {/* Formulário de projetos */}
         <form
           onSubmit={handleAddProject}
-          className="flex flex-col gap-4 bg-gray-900 p-6 rounded-2xl shadow-lg mb-10"
+          className="flex flex-col gap-4 bg-gray-900 p-6 rounded-2xl shadow-lg mt-10 mb-10"
         >
           <input
             type="text"
@@ -113,12 +126,13 @@ export default function Dashboard() {
           <button
             type="submit"
             disabled={uploading}
-            className="bg-purple-500 py-2 rounded-lg hover:bg-purple-600 transition disabled:opacity-50"
+            className="cursor-pointer bg-purple-500 py-2 rounded-lg hover:bg-purple-600 transition disabled:opacity-50"
           >
             {uploading ? "Enviando..." : "Adicionar projeto"}
           </button>
         </form>
 
+        {/* Lista de projetos */}
         <div className="space-y-4">
           {projects.map((project) => (
             <motion.div
@@ -136,13 +150,13 @@ export default function Dashboard() {
                   <img
                     src={project.imageUrl}
                     alt={project.title}
-                    className="mt-3 rounded-lg w-40 object-cover"
+                    className="mt-3 rounded-lg w-40 object-cover border border-gray-700"
                   />
                 )}
               </div>
               <button
                 onClick={() => handleDelete(project.id)}
-                className="bg-red-600 px-3 py-1 rounded hover:bg-red-700 transition"
+                className="cursor-pointer bg-red-600 px-3 py-1 rounded hover:bg-red-700 transition"
               >
                 Deletar
               </button>

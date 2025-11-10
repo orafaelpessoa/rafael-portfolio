@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { supabase } from "@/src/lib/supabase";
-import {uploadProfileImage, updateUserAvatar} from "@/src/lib/profile";
+import { uploadProfileImage, updateUserAvatar } from "@/src/lib/profile";
+import ProfileImageUploader from "@/src/components/ProfileImageUploader";
 import {
   fetchProjects,
   addProject,
@@ -25,7 +26,6 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Verifica sessão atual e mantém o usuário logado
     const checkSession = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (error || !data.session) {
@@ -38,7 +38,6 @@ export default function Dashboard() {
 
     checkSession();
 
-    // Observa mudanças de sessão (login/logout)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) router.push("/admin/login");
       else setUser(session.user);
@@ -147,9 +146,13 @@ export default function Dashboard() {
           Sair
         </button>
 
+        {/* 🔹 Uploader de imagem de perfil */}
+        <ProfileImageUploader />
+
+        {/* 🔹 Formulário de criação/edição de projeto */}
         <form
           onSubmit={handleAddOrEditProject}
-          className="flex flex-col gap-4 bg-gray-900 p-6 rounded-2xl shadow-lg mb-10"
+          className="flex flex-col gap-4 bg-gray-900 p-6 rounded-2xl shadow-lg mb-10 mt-10"
         >
           <input
             type="text"
@@ -202,6 +205,7 @@ export default function Dashboard() {
           </div>
         </form>
 
+        {/* 🔹 Lista de projetos */}
         <div className="space-y-4">
           {projects.map((project) => (
             <motion.div

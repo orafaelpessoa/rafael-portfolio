@@ -1,24 +1,25 @@
 import { supabase } from "./supabase";
 
-export async function uploadProfileImage(file: File) {
-  const filePath = `profile/${Date.now()}_${file.name}`;
-  const { data, error } = await supabase.storage
-    .from("portfolio-storage")
+// Faz upload da imagem de perfil para o storage do Supabase
+export async function uploadProfileImage(file: File): Promise<string> {
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${crypto.randomUUID()}.${fileExt}`;
+  const filePath = `avatars/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("profile-images") 
     .upload(filePath, file);
 
-  if (error) throw error;
+  if (uploadError) throw uploadError;
 
-  const { data: urlData } = supabase.storage
-    .from("portfolio-storage")
-    .getPublicUrl(filePath);
-
-  return urlData?.publicUrl || "";
+  const { data } = supabase.storage.from("projects").getPublicUrl(filePath);
+  return data.publicUrl;
 }
 
-export async function updateUserAvatar(userId: string, avatarUrl: string) {
+export async function updateUserAvatar(userId: string, imageUrl: string) {
   const { error } = await supabase
     .from("profile")
-    .upsert({ user_id: userId, avatar_url: avatarUrl });
+    .upsert({ id: userId, image_url: imageUrl });
 
   if (error) throw error;
 }
