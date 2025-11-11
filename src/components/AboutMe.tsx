@@ -1,8 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/src/lib/supabase";
 
 export default function AboutMe() {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
   const textVariant = {
     hidden: { opacity: 0, y: 20 },
     visible: (index: number = 0) => ({
@@ -16,10 +20,22 @@ export default function AboutMe() {
     }),
   };
 
-  const scrollToContact = () => {
-    const contactSection = document.getElementById("contact");
-    contactSection?.scrollIntoView({ behavior: "smooth" });
-  };
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data, error } = await supabase
+        .from("profile")
+        .select("avatar_url")
+        .limit(1)
+        .single();
+
+      if (!error && data?.avatar_url) {
+        setAvatarUrl(data.avatar_url);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
 
   return (
     <section
@@ -35,7 +51,7 @@ export default function AboutMe() {
         viewport={{ once: true }}
       >
         <img
-          src="/icons/images/profile.jpg"
+          src={avatarUrl ?? "/icons/images/profile.jpg"}
           alt="Rafael Pessoa"
           className="w-full h-full object-cover"
         />

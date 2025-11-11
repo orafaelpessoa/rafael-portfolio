@@ -1,6 +1,5 @@
 import { supabase } from "./supabase";
 
-// Faz upload da imagem de perfil para o storage do Supabase
 export async function uploadProfileImage(file: File): Promise<string> {
   const fileExt = file.name.split(".").pop();
   const fileName = `${crypto.randomUUID()}.${fileExt}`;
