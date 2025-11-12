@@ -21,21 +21,26 @@ export default function AboutMe() {
   };
 
   useEffect(() => {
-    const loadProfile = async () => {
-      const { data, error } = await supabase
-        .from("profile")
-        .select("avatar_url")
-        .limit(1)
-        .single();
+  const loadProfile = async () => {
+    const { data, error } = await supabase
+      .from("profile")
+      .select("avatar_url")
+      .limit(1)
+      .single();
 
-      if (!error && data?.avatar_url) {
-        setAvatarUrl(data.avatar_url);
-      }
-    };
+    if (error) {
+      console.error("Erro ao carregar perfil:", error);
+      return;
+    }
 
-    loadProfile();
-  }, []);
+    console.log("Perfil carregado:", data);
 
+    if (data?.avatar_url) {
+      setAvatarUrl(data.avatar_url);
+    }
+  };
+  loadProfile();
+}, []);
 
   return (
     <section
@@ -76,8 +81,9 @@ export default function AboutMe() {
           variants={textVariant}
           className="text-lg leading-relaxed text-gray-200"
         >
-          Olá! Sou <span className="font-semibold text-white">Rafael Pessoa</span>, desenvolvedor web apaixonado por
-          criar interfaces modernas e animadas.
+          Olá! Sou{" "}
+          <span className="font-semibold text-white">Rafael Pessoa</span>,
+          desenvolvedor web apaixonado por criar interfaces modernas e animadas.
         </motion.p>
 
         <motion.p
@@ -86,8 +92,10 @@ export default function AboutMe() {
           className="text-lg leading-relaxed text-gray-300"
         >
           Trabalho com tecnologias como{" "}
-          <span className="text-purple-400 font-medium">React, Next.js, TailwindCSS e TypeScript</span> para desenvolver
-          experiências digitais fluidas e responsivas.
+          <span className="text-purple-400 font-medium">
+            React, Next.js, TailwindCSS e TypeScript
+          </span>{" "}
+          para desenvolver experiências digitais fluidas e responsivas.
         </motion.p>
 
         <motion.p
@@ -95,7 +103,8 @@ export default function AboutMe() {
           variants={textVariant}
           className="text-lg leading-relaxed text-gray-400"
         >
-          Meu foco é unir design e performance para entregar projetos que realmente encantem o usuário.
+          Meu foco é unir design e performance para entregar projetos que
+          realmente encantem o usuário.
         </motion.p>
       </motion.div>
     </section>
