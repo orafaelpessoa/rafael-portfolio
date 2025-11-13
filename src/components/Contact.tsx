@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FaWhatsapp, FaEnvelope, FaLinkedin } from "react-icons/fa";
+import { FaWhatsapp, FaEnvelope, FaLinkedin, FaGithub } from "react-icons/fa";
 
 export default function Contact() {
   const whatsappLink = `https://wa.me/83988539348?text=${encodeURIComponent(
@@ -14,12 +14,43 @@ export default function Contact() {
     "Olá, vi seu portfólio e gostaria de conversar sobre um projeto!"
   )}`;
 
-  const linkedinLink = "https://www.linkedin.com/in/seu-perfil/"; 
+  const linkedinLink = "https://www.linkedin.com/in/orafaelpessoa";
+  const githubLink = "https://github.com/orafaelpessoa";
+
+  const contacts = [
+    {
+      icon: <FaWhatsapp />,
+      color: "text-green-500",
+      label: "WhatsApp",
+      href: whatsappLink,
+    },
+    {
+      icon: <FaEnvelope />,
+      color: "text-purple-500",
+      label: "Email",
+      href: emailLink,
+    },
+    {
+      icon: <FaLinkedin />,
+      color: "text-blue-500",
+      label: "LinkedIn",
+      href: linkedinLink,
+    },
+    {
+      icon: <FaGithub />,
+      color: "text-white",
+      label: "GitHub",
+      href: githubLink,
+    },
+  ];
 
   return (
-    <section id="contact" className="py-20 px-10 bg-neutral-950 flex flex-col items-center">
+    <section
+      id="contact"
+      className="py-20 px-10 bg-neutral-950 flex flex-col items-center"
+    >
       <motion.h2
-        className="text-3xl font-bold mb-10 text-center text-white"
+        className="text-3xl font-bold mb-12 text-center text-white"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -28,69 +59,32 @@ export default function Contact() {
         Contato
       </motion.h2>
 
-      <motion.p
-        className="text-center text-gray-300 max-w-xl mb-8"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-      >
-        Gostou do meu trabalho ou quer bater um papo sobre algum projeto?  
-        Me mande uma mensagem pelo WhatsApp, Email ou LinkedIn!
-      </motion.p>
+      <div className="flex gap-10">
+        {contacts.map((item, i) => (
+          <motion.div
+            key={i}
+            className="relative flex flex-col items-center group"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {/* Ícone */}
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${item.color} text-4xl transition-transform cursor-pointer`}
+            >
+              {item.icon}
+            </a>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* WhatsApp */}
-        <motion.a
-          href={whatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="relative inline-flex items-center px-6 py-3 font-semibold text-lg text-white rounded-lg overflow-hidden bg-linear-to-r from-green-500 to-green-600 shadow-[0_0_25px_rgba(72,187,120,0.4)]"
-          whileHover={{
-            scale: 1.05,
-            boxShadow: "0 0 35px rgba(72,187,120,0.7)",
-            rotateX: 5,
-            rotateY: -5,
-          }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <FaWhatsapp className="mr-2 text-2xl" />
-          WhatsApp
-        </motion.a>
-
-        {/* Email */}
-        <motion.a
-          href={emailLink}
-          className="relative inline-flex items-center px-6 py-3 font-semibold text-lg text-white rounded-lg overflow-hidden bg-linear-to-r from-purple-600 to-fuchsia-500 shadow-[0_0_25px_rgba(168,85,247,0.4)]"
-          whileHover={{
-            scale: 1.05,
-            boxShadow: "0 0 35px rgba(168,85,247,0.7)",
-            rotateX: 5,
-            rotateY: -5,
-          }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <FaEnvelope className="mr-2 text-2xl" />
-          Email
-        </motion.a>
-
-        {/* LinkedIn */}
-        <motion.a
-          href={linkedinLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="relative inline-flex items-center px-6 py-3 font-semibold text-lg text-white rounded-lg overflow-hidden bg-linear-to-r from-blue-600 to-sky-500 shadow-[0_0_25px_rgba(37,99,235,0.4)]"
-          whileHover={{
-            scale: 1.05,
-            boxShadow: "0 0 35px rgba(37,99,235,0.7)",
-            rotateX: 5,
-            rotateY: -5,
-          }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <FaLinkedin className="mr-2 text-2xl" />
-          LinkedIn
-        </motion.a>
+            {/* Tooltip funcional */}
+            <span
+              className="absolute mt-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-gray-300 text-sm bg-neutral-800 px-2 py-1 rounded-md shadow-lg pointer-events-none"
+            >
+              {item.label}
+            </span>
+          </motion.div>
+        ))}
       </div>
     </section>
   );
