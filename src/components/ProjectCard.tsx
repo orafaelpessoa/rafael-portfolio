@@ -7,8 +7,8 @@ interface Project {
   id: string;
   title: string;
   description?: string;
-  image_url?: string;      // imagem principal
-  images_url?: string[];       // imagens adicionais
+  image_url?: string;     
+  images_url?: string[];       
 }
 
 interface ProjectCardProps {
@@ -17,12 +17,11 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
-  // Todas as imagens do projeto
+
   const allImages = [project.image_url, ...(project.images_url ?? [])].filter(Boolean) as string[];
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Troca de imagem a cada 3 segundos
   useEffect(() => {
     if (allImages.length <= 1) return; // sem loop se tiver só 1 imagem
 
