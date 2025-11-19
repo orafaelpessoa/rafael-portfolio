@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { supabase } from "@/src/lib/supabase";
-import { uploadProfileImage, updateUserAvatar } from "@/src/lib/profile";
 import ProfileImageUploader from "@/src/components/ProfileImageUploader";
 import {
   fetchProjects,
@@ -12,16 +11,20 @@ import {
   deleteProject,
   updateProject,
   uploadImage,
+  uploadMultipleImages,
   Project,
 } from "@/src/lib/projects";
+import ImageUploader from "@/src/components/ImageUploader";
 
-export default function Dashboard() {
+export default function AdminPage() {
   const [user, setUser] = useState<any>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [mainImage, setMainImage] = useState<File | null>(null);
+  const [galleryImages, setGalleryImages] = useState<File[]>([]);
+  const [mainPreview, setMainPreview] = useState<string | null>(null);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
   const router = useRouter();
 
@@ -35,13 +38,14 @@ export default function Dashboard() {
         await loadProjects();
       }
     };
-
     checkSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) router.push("/admin/login");
-      else setUser(session.user);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) router.push("/admin/login");
+        else setUser(session.user);
+      }
+    );
 
     return () => {
       listener.subscription.unsubscribe();
@@ -49,27 +53,21 @@ export default function Dashboard() {
   }, [router]);
 
   const loadProjects = async () => {
-    console.log("🟣 [DEBUG] Carregando projetos...");
     try {
       const data = await fetchProjects();
-
-      if (!data || data.length === 0) {
-        console.warn("⚠️ Nenhum projeto retornado do Supabase");
-      } else {
-        console.log(`✅ ${data.length} projetos carregados:`, data);
-      }
-
       setProjects(data);
     } catch (error) {
-      console.error("❌ Erro ao carregar projetos:", error);
+      console.error("Erro ao carregar projetos:", error);
     }
   };
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setImage(null);
-    setPreview(null);
+    setMainImage(null);
+    setGalleryImages([]);
+    setMainPreview(null);
+    setGalleryPreviews([]);
     setEditId(null);
   };
 
@@ -77,49 +75,53 @@ export default function Dashboard() {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
 
-    let imageUrl = preview ?? "";
-
-    if (image) {
-      imageUrl = await uploadImage(image);
-    }
-
     try {
+      // Upload da capa
+      let image_url = mainPreview ?? null;
+      if (mainImage) image_url = await uploadImage(mainImage);
+
+      // Upload da galeria
+      let gallery_images: string[] | null = null;
+      if (galleryImages.length > 0)
+        gallery_images = await uploadMultipleImages(galleryImages);
+
       if (editId) {
-        await updateProject(editId, { title, description, imageUrl });
-        console.log("✏️ Projeto atualizado com sucesso!");
+        await updateProject(editId, {
+          title,
+          description,
+          image_url,
+          gallery_images,
+        });
+        console.log("Projeto atualizado com sucesso!");
       } else {
-        await addProject({ title, description, imageUrl });
-        console.log("🆕 Projeto adicionado com sucesso!");
+        await addProject({ title, description, image_url, gallery_images });
+        console.log("Projeto adicionado com sucesso!");
       }
+
       resetForm();
       loadProjects();
     } catch (error) {
-      console.error("❌ Erro ao adicionar/editar projeto:", error);
+      console.error("Erro ao adicionar/editar projeto:", error);
     }
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditId(project.id ?? null);
+    setTitle(project.title);
+    setDescription(project.description ?? "");
+    setMainPreview(project.image_url ?? null);
+    setGalleryPreviews(project.gallery_images ?? []);
+    setMainImage(null);
+    setGalleryImages([]);
   };
 
   const handleDeleteProject = async (id: string) => {
     try {
       await deleteProject(id);
-      console.log("🗑️ Projeto deletado com sucesso!");
+      console.log("Projeto deletado com sucesso!");
       loadProjects();
     } catch (error) {
-      console.error("❌ Erro ao deletar projeto:", error);
-    }
-  };
-
-  const handleEditProject = (project: Project) => {
-    setEditId(project.id || null);
-    setTitle(project.title);
-    setDescription(project.description);
-    setPreview(project.imageUrl || null);
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImage(file);
-      setPreview(URL.createObjectURL(file));
+      console.error("Erro ao deletar projeto:", error);
     }
   };
 
@@ -146,10 +148,9 @@ export default function Dashboard() {
           Sair
         </button>
 
-        {/* 🔹 Uploader de imagem de perfil */}
         <ProfileImageUploader />
 
-        {/* 🔹 Formulário de criação/edição de projeto */}
+        {/* Formulário de projeto */}
         <form
           onSubmit={handleAddOrEditProject}
           className="flex flex-col gap-4 bg-gray-900 p-6 rounded-2xl shadow-lg mb-10 mt-10"
@@ -168,22 +169,31 @@ export default function Dashboard() {
             onChange={(e) => setDescription(e.target.value)}
           />
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="text-sm text-gray-400"
+          {/* Imagem principal */}
+          <ImageUploader
+            files={mainImage ? [mainImage] : []}
+            setFiles={(files) => {
+              const file = files[0] ?? null;
+              setMainImage(file);
+              setMainPreview(file ? URL.createObjectURL(file) : null);
+            }}
+            previews={mainPreview ? [mainPreview] : []}
+            setPreviews={(prevs) => {
+              const first = prevs[0] ?? null;
+              setMainPreview(first);
+            }}
+            label="Imagem principal"
           />
 
-          {preview && (
-            <div className="flex justify-center">
-              <img
-                src={preview}
-                alt="Pré-visualização"
-                className="w-40 h-40 object-cover rounded-xl border border-gray-700 mt-2"
-              />
-            </div>
-          )}
+          {/* Galeria */}
+          <ImageUploader
+            files={galleryImages}
+            setFiles={setGalleryImages}
+            previews={galleryPreviews}
+            setPreviews={setGalleryPreviews}
+            multiple
+            label="Galeria (opcional)"
+          />
 
           <div className="flex gap-3">
             <button
@@ -205,19 +215,19 @@ export default function Dashboard() {
           </div>
         </form>
 
-        {/* 🔹 Lista de projetos */}
+        {/* Lista de projetos */}
         <div className="space-y-4">
           {projects.map((project) => (
             <motion.div
-              key={project.id}
+              key={project.id ?? project.title}
               className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-center gap-4">
-                {project.imageUrl && (
+                {project.image_url && (
                   <img
-                    src={project.imageUrl}
+                    src={project.image_url}
                     alt={project.title}
                     className="w-16 h-16 object-cover rounded-lg border border-gray-700"
                   />
@@ -232,7 +242,7 @@ export default function Dashboard() {
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => handleEditProject(project)}
+                  onClick={() => project.id && handleEditProject(project)}
                   className="cursor-pointer bg-blue-600 px-3 py-1 rounded hover:bg-blue-700 transition"
                 >
                   Editar

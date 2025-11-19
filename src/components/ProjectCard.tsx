@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-interface Project {
+export interface Project {
   id: string;
   title: string;
   description?: string;
   image_url?: string;     
-  images_url?: string[];       
+  gallery_images?: string[];       
 }
 
 interface ProjectCardProps {
@@ -17,13 +17,11 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
-
-  const allImages = [project.image_url, ...(project.images_url ?? [])].filter(Boolean) as string[];
-
+  const allImages = [project.image_url, ...(project.gallery_images ?? [])].filter(Boolean) as string[];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    if (allImages.length <= 1) return; // sem loop se tiver só 1 imagem
+    if (allImages.length <= 1) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % allImages.length);
@@ -52,7 +50,6 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           </div>
         )}
 
-        {/* Indicador de carrossel */}
         {allImages.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
             {allImages.map((_, idx) => (
@@ -61,7 +58,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
                 className={`w-2 h-2 rounded-full ${
                   idx === currentIndex ? "bg-purple-500" : "bg-gray-400"
                 }`}
-              ></span>
+              />
             ))}
           </div>
         )}
