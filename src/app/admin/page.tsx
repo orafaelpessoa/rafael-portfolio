@@ -19,15 +19,25 @@ import ImageUploader from "@/src/components/ImageUploader";
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+
+  const [githubUrl, setGithubUrl] = useState("");
+  const [liveUrl, setLiveUrl] = useState("");
+
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [mainPreview, setMainPreview] = useState<string | null>(null);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+
   const [editId, setEditId] = useState<string | null>(null);
+
   const router = useRouter();
 
+  // ------------------------------
+  // Sessão + Carregar Projetos
+  // ------------------------------
   useEffect(() => {
     const checkSession = async () => {
       const { data, error } = await supabase.auth.getSession();
@@ -38,6 +48,7 @@ export default function AdminPage() {
         await loadProjects();
       }
     };
+
     checkSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -61,9 +72,14 @@ export default function AdminPage() {
     }
   };
 
+  // ------------------------------
+  // Resetar formulário
+  // ------------------------------
   const resetForm = () => {
     setTitle("");
     setDescription("");
+    setGithubUrl("");
+    setLiveUrl("");
     setMainImage(null);
     setGalleryImages([]);
     setMainPreview(null);
@@ -71,6 +87,9 @@ export default function AdminPage() {
     setEditId(null);
   };
 
+  // ------------------------------
+  // Adicionar / Editar Projeto
+  // ------------------------------
   const handleAddOrEditProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
@@ -91,10 +110,21 @@ export default function AdminPage() {
           description,
           image_url,
           gallery_images,
+          github_url: githubUrl,
+          live_url: liveUrl,
         });
+
         console.log("Projeto atualizado com sucesso!");
       } else {
-        await addProject({ title, description, image_url, gallery_images });
+        await addProject({
+          title,
+          description,
+          image_url,
+          gallery_images,
+          github_url: githubUrl,
+          live_url: liveUrl,
+        });
+
         console.log("Projeto adicionado com sucesso!");
       }
 
@@ -105,16 +135,24 @@ export default function AdminPage() {
     }
   };
 
+  // ------------------------------
+  // Carregar dados no formulário ao editar
+  // ------------------------------
   const handleEditProject = (project: Project) => {
     setEditId(project.id ?? null);
     setTitle(project.title);
     setDescription(project.description ?? "");
+    setGithubUrl(project.github_url ?? "");
+    setLiveUrl(project.live_url ?? "");
     setMainPreview(project.image_url ?? null);
     setGalleryPreviews(project.gallery_images ?? []);
     setMainImage(null);
     setGalleryImages([]);
   };
 
+  // ------------------------------
+  // Deletar projeto
+  // ------------------------------
   const handleDeleteProject = async (id: string) => {
     try {
       await deleteProject(id);
@@ -125,11 +163,17 @@ export default function AdminPage() {
     }
   };
 
+  // ------------------------------
+  // Logout
+  // ------------------------------
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/admin/login");
   };
 
+  // ------------------------------
+  // UI
+  // ------------------------------
   return (
     <section className="min-h-screen bg-black text-white p-10">
       <div className="max-w-3xl mx-auto">
@@ -150,7 +194,7 @@ export default function AdminPage() {
 
         <ProfileImageUploader />
 
-        {/* Formulário de projeto */}
+        {/* Formulário */}
         <form
           onSubmit={handleAddOrEditProject}
           className="flex flex-col gap-4 bg-gray-900 p-6 rounded-2xl shadow-lg mb-10 mt-10"
@@ -162,6 +206,7 @@ export default function AdminPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+
           <textarea
             placeholder="Descrição"
             className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
@@ -169,7 +214,25 @@ export default function AdminPage() {
             onChange={(e) => setDescription(e.target.value)}
           />
 
-          {/* Imagem principal */}
+          {/* GitHub */}
+          <input
+            type="text"
+            placeholder="Link do GitHub (opcional)"
+            className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
+            value={githubUrl}
+            onChange={(e) => setGithubUrl(e.target.value)}
+          />
+
+          {/* Live */}
+          <input
+            type="text"
+            placeholder="Link do Live Site (opcional)"
+            className="p-2 rounded bg-gray-800 border border-gray-700 text-white"
+            value={liveUrl}
+            onChange={(e) => setLiveUrl(e.target.value)}
+          />
+
+          {/* Capa */}
           <ImageUploader
             files={mainImage ? [mainImage] : []}
             setFiles={(files) => {
@@ -237,6 +300,28 @@ export default function AdminPage() {
                     {project.title}
                   </h3>
                   <p className="text-gray-400">{project.description}</p>
+
+                  {/* Mostrar links */}
+                  <div className="flex gap-3 mt-2 text-sm">
+                    {project.github_url && (
+                      <a
+                        href={project.github_url}
+                        target="_blank"
+                        className="text-purple-400 underline"
+                      >
+                        GitHub
+                      </a>
+                    )}
+                    {project.live_url && (
+                      <a
+                        href={project.live_url}
+                        target="_blank"
+                        className="text-green-400 underline"
+                      >
+                        Live
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
 
