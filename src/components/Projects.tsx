@@ -9,7 +9,7 @@ interface Project {
   id: string;
   title: string;
   description: string;
-  image_url: string | null;       
+  image_url: string | null;
   gallery_images?: string[] | null;
   github_url: string | null;
   live_url: string | null;
@@ -18,11 +18,14 @@ interface Project {
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [cardImageIndex, setCardImageIndex] = useState<{ [key: string]: number }>({});
+  const [cardImageIndex, setCardImageIndex] = useState<{
+    [key: string]: number;
+  }>({});
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // fallback para imagens
-  const safeURL = (url?: string | null) => (!url || url === "null" ? "/placeholder.png" : url);
+  const safeURL = (url?: string | null) =>
+    !url || url === "null" ? "/placeholder.png" : url;
 
   const safeImages = (img: string | null, arr?: string[] | null) => {
     const list = [img, ...(arr ?? [])].filter(Boolean) as string[];
@@ -36,7 +39,9 @@ export default function Projects() {
     const fetchProjects = async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id, title, description, image_url, gallery_images, github_url, live_url")
+        .select(
+          "id, title, description, image_url, gallery_images, github_url, live_url"
+        )
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -79,7 +84,10 @@ export default function Projects() {
   useEffect(() => {
     if (!selectedProject) return;
 
-    const images = safeImages(selectedProject.image_url, selectedProject.gallery_images);
+    const images = safeImages(
+      selectedProject.image_url,
+      selectedProject.gallery_images
+    );
     if (images.length <= 1) return;
 
     const interval = setInterval(() => {
@@ -89,7 +97,11 @@ export default function Projects() {
     return () => clearInterval(interval);
   }, [selectedProject]);
 
-  const getCurrentModalImage = () => safeImages(selectedProject?.image_url ?? null, selectedProject?.gallery_images)[currentImageIndex] ?? "/placeholder.png";
+  const getCurrentModalImage = () =>
+    safeImages(
+      selectedProject?.image_url ?? null,
+      selectedProject?.gallery_images
+    )[currentImageIndex] ?? "/placeholder.png";
 
   return (
     <section id="projects" className="py-20 text-white">
@@ -99,7 +111,10 @@ export default function Projects() {
         {/* GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project) => {
-            const images = safeImages(project.image_url, project.gallery_images);
+            const images = safeImages(
+              project.image_url,
+              project.gallery_images
+            );
             const index = cardImageIndex[project.id] ?? 0;
 
             return (
@@ -135,7 +150,9 @@ export default function Projects() {
                 </div>
 
                 <h3 className="mt-4 text-xl font-semibold">{project.title}</h3>
-                <p className="text-neutral-400 text-sm">{project.description}</p>
+                <p className="text-neutral-400 text-sm">
+                  {project.description}
+                </p>
               </motion.div>
             );
           })}
@@ -156,8 +173,13 @@ export default function Projects() {
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.8 }}
               >
-                <h3 className="text-2xl font-bold mb-2">{selectedProject.title}</h3>
-                <p className="text-neutral-400 mb-4">{selectedProject.description}</p>
+                <h3 className="text-2xl font-bold mb-2">
+                  {selectedProject.title}
+                </h3>
+
+                <p className="text-neutral-400 mb-4">
+                  {selectedProject.description}
+                </p>
 
                 {/* CARROSSEL */}
                 <div className="relative w-full h-56 rounded-xl overflow-hidden mb-5">
@@ -168,13 +190,21 @@ export default function Projects() {
                     className="object-cover transition-all duration-500"
                   />
 
-                  {safeImages(selectedProject.image_url, selectedProject.gallery_images).length > 1 && (
+                  {safeImages(
+                    selectedProject.image_url,
+                    selectedProject.gallery_images
+                  ).length > 1 && (
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
-                      {safeImages(selectedProject.image_url, selectedProject.gallery_images).map((_, idx) => (
+                      {safeImages(
+                        selectedProject.image_url,
+                        selectedProject.gallery_images
+                      ).map((_, idx) => (
                         <span
                           key={idx}
                           className={`w-2 h-2 rounded-full ${
-                            idx === currentImageIndex ? "bg-purple-500" : "bg-gray-500"
+                            idx === currentImageIndex
+                              ? "bg-purple-500"
+                              : "bg-gray-500"
                           }`}
                         />
                       ))}
@@ -182,33 +212,29 @@ export default function Projects() {
                   )}
                 </div>
 
-                {/* BOTÕES */}
+                {/* BOTÕES — só aparecem se tiver link */}
                 <div className="flex gap-4 mt-4">
-                  <a
-                    href={selectedProject.github_url || "#"}
-                    target="_blank"
-                    className={`flex-1 text-center py-2 rounded-xl transition ${
-                      selectedProject.github_url
-                        ? "bg-blue-600 hover:bg-blue-700"
-                        : "bg-gray-700 cursor-not-allowed opacity-50"
-                    }`}
-                    onClick={(e) => !selectedProject.github_url && e.preventDefault()}
-                  >
-                    {selectedProject.github_url ? "GitHub" : "Não definido"}
-                  </a>
+                  {selectedProject.github_url &&
+                    selectedProject.github_url.trim() !== "" && (
+                      <a
+                        href={selectedProject.github_url}
+                        target="_blank"
+                        className="flex-1 text-center py-2 rounded-xl bg-blue-600 hover:bg-blue-700 transition"
+                      >
+                        GitHub
+                      </a>
+                    )}
 
-                  <a
-                    href={selectedProject.live_url || "#"}
-                    target="_blank"
-                    className={`flex-1 text-center py-2 rounded-xl transition ${
-                      selectedProject.live_url
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "bg-gray-700 cursor-not-allowed opacity-50"
-                    }`}
-                    onClick={(e) => !selectedProject.live_url && e.preventDefault()}
-                  >
-                    {selectedProject.live_url ? "Site Ao Vivo" : "Não definido"}
-                  </a>
+                  {selectedProject.live_url &&
+                    selectedProject.live_url.trim() !== "" && (
+                      <a
+                        href={selectedProject.live_url}
+                        target="_blank"
+                        className="flex-1 text-center py-2 rounded-xl bg-green-600 hover:bg-green-700 transition"
+                      >
+                        Site Ao Vivo
+                      </a>
+                    )}
                 </div>
 
                 <button
