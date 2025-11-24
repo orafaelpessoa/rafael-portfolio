@@ -212,7 +212,7 @@ export default function Projects() {
                 </div>
 
                 <button
-                  className="mt-6 w-full bg-neutral-800 py-2 rounded-xl hover:bg-neutral-700 transition"
+                  className="cursor-pointer mt-6 w-full bg-neutral-800 py-2 rounded-xl hover:bg-neutral-700 transition"
                   onClick={() => setSelectedProject(null)}
                 >
                   Fechar
