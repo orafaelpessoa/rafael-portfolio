@@ -56,7 +56,7 @@ export default function AboutMe() {
         viewport={{ once: true }}
       >
         <img
-          src={avatarUrl ?? "/icons/images/profile.jpg"}
+          src={avatarUrl ?? "/icons/images/profile.jpeg"}
           alt="Rafael Pessoa"
           className="w-full h-full object-cover"
         />
