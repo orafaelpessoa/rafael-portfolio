@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { supabase } from "@/src/lib/supabase";
+import { supabase } from "@/src/lib/supabase-client";
 import ProfileImageUploader from "@/src/components/ProfileImageUploader";
 import {
   fetchProjects,

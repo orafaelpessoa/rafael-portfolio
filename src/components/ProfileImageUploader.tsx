@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/src/lib/supabase";
+import { supabase } from "@/src/lib/supabase-client";
 
 export default function ProfileImageUploader() {
   const [uploading, setUploading] = useState(false);

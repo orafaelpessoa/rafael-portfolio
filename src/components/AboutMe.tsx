@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/src/lib/supabase";
+import { supabase } from "@/src/lib/supabase-client";
 
 export default function AboutMe() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
