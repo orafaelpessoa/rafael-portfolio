@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { FaWhatsapp, FaEnvelope, FaLinkedin, FaGithub } from "react-icons/fa";
 
 export default function Contact() {
-  const whatsappLink = `https://wa.me/83988539348?text=${encodeURIComponent(
+  const whatsappLink = `https://wa.me/+5583988539348?text=${encodeURIComponent(
     "Olá, vi seu portfólio e gostaria de conversar sobre um projeto!"
   )}`;
 
